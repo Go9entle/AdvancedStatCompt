@@ -1,0 +1,704 @@
+\documentclass[12pt,hyperref,a4paper,UTF8]{ctexart}
+\usepackage{RUCReport}
+\usepackage{listings,graphicx,fontspec,booktabs,float}
+\usepackage{xcolor}
+\usepackage[toc,page,title]{appendix}
+\usepackage[ruled,boxed]{algorithm2e}
+\usepackage{amsmath}
+\usepackage{algpseudocode}
+% 定义可能使用到的颜色
+\definecolor{CPPLight}  {HTML} {686868}
+\definecolor{CPPSteel}  {HTML} {888888}
+\definecolor{CPPDark}   {HTML} {262626}
+\definecolor{CPPBlue}   {HTML} {4172A3}
+\definecolor{CPPGreen}  {HTML} {487818}
+\definecolor{CPPBrown}  {HTML} {A07040}
+\definecolor{CPPRed}    {HTML} {AD4D3A}
+\definecolor{CPPViolet} {HTML} {7040A0}
+\definecolor{CPPGray}  {HTML} {B8B8B8}
+\definecolor{keywordcolor}{rgb}{0.8,0.1,0.5}
+\definecolor{webgreen}{rgb}{0,.5,0}
+\definecolor{bgcolor}{rgb}{0.92,0.92,0.92}
+\ctexset{
+    appendix        = {
+        name        = {附录}
+    },
+    % section         = {
+    %     format      = {\bfseries\zihao{4}\heiti\centering},
+    %     number      = {\bfseries\arabic{section}.},
+    %     aftername   = {\hspace{1em}}
+    % },
+    % subsection      = {
+    %     format      = {\bfseries\zihao{-4}},
+    %     number      = {\bfseries\arabic{section}.\bfseries\arabic{subsection}},
+    %     aftername   = {\hspace{1em}}
+    % },
+    % subsubsection   = {
+    %     format      = {\bfseries\zihao{-4}},
+    %     number      = {\bfseries\arabic{section}.\bfseries\arabic{subsection}.\bfseries\arabic{subsubsection}},
+    %     aftername   = {\hspace{1em}}
+    % },
+}
+\lstset{
+    breaklines = true,                                   % 自动将长的代码行换行排版
+    extendedchars=false,                                 % 解决代码跨页时，章节标题，页眉等汉字不显示的问题
+    columns=fixed,       
+    numbers=left,                                        % 在左侧显示行号
+    basicstyle=\zihao{-5}\ttfamily,
+    numberstyle=\small,
+    frame=none,                                          % 不显示背景边框
+    % backgroundcolor=\color[RGB]{245,245,244},            % 设定背景颜色
+    keywordstyle=\color[RGB]{40,40,255},                 % 设定关键字颜色
+    numberstyle=\footnotesize\color{darkgray},           % 设定行号格式
+    commentstyle=\it\color[RGB]{0,96,96},                % 设置代码注释的格式
+    stringstyle=\rmfamily\slshape\color[RGB]{128,0,0},   % 设置字符串格式
+    showstringspaces=false,                              % 不显示字符串中的空格
+    % frame=leftline,topline,rightline, bottomline         %分别对应只在左侧，上方，右侧，下方有竖线
+    frame=shadowbox,                                     % 设置阴影
+    rulesepcolor=\color{red!20!green!20!blue!20},        % 阴影颜色
+    basewidth=0.6em,
+}
+
+
+\lstdefinestyle{R}{
+    language=R,
+    keywordstyle=\color{blue}\bfseries,  % 关键词使用蓝色加粗
+    commentstyle=\color{green},          % 注释使用绿色
+    stringstyle=\color{red},             % 字符串使用红色
+    basicstyle=\ttfamily\small,          % 设置代码字体和大小
+    numbers=left,                        % 行号在左边
+    numberstyle=\tiny\color{gray},       % 行号样式
+    stepnumber=1,                        % 每行显示行号
+    numbersep=5pt,                       % 行号与代码之间的距离
+    backgroundcolor=\color{white},       % 背景色为白色
+    showspaces=false,                    % 不显示空格
+    showstringspaces=false,              % 不显示字符串中的空格
+    breaklines=true,                     % 自动换行
+    breakatwhitespace=true,              % 在空格处换行
+    escapeinside={\%*}{*)}               % 用于LaTeX的转义字符
+}
+
+\lstdefinestyle{Python}{
+    language=Python,
+}
+
+%%-------------------------------正文开始---------------------------%%
+\begin{document}
+
+%%-----------------------封面--------------------%%
+\cover
+\thispagestyle{empty}
+        % 小组分工
+{ 小组分工：\par}
+\vspace{0.25cm}
+\begin{tabular}{ll}
+    郭奕： & 算法设计、论文撰写； \\ 
+    钟艳泓： & 数据模拟及应用案例的实现、论文撰写； \\ 
+    郭镇涛： & R 包的开发与制作、论文撰写。 \\
+\end{tabular}
+%%------------------摘要-------------%%
+\newpage
+%可选择这里也放一个标题
+% \begin{center}
+%     \title{ \Huge \textbf{{MissCat:基于EM和DA算法的多元分类变量的插补}}}
+%  \end{center}
+\begin{abstract}
+    本文提供了通过期望最大化（EM）算法和数据增强（DA）算法提供了较为高效和准确的处理分类变量数据集缺失问题的实用方法。算法的设计与实现中特别考虑到了贝叶斯方法的集成，允许自定义与数据相关的先验参数或者非信息性先验，以适应不同类型的数据和问题背景。为了提高计算速度，我们在进行分类变量的匹配和多项式分布的汇总统计中采用了基于\texttt{Rcpp}中的哈希表（Hash Table）。在本文中我们介绍该方法的实现原理，并结合R包给出使用指南和应用场景。最后，为了与其他常见的插补包（如\textbf{mice}包和\textbf{Amelia}包）进行对比，本文对模拟的3种缺失模式的数据分别用不同的包进行插补比较插补速度和准确性，结果表明基于本方法开发的\textbf{MissCat}包在速度上逊于部分成熟的插补包，但在准确性上却出人意料地优于\textbf{mice}包和\textbf{Amelia}包，展示了本R包是处理大规模复杂缺失数据问题的一个有力工具。
+    \par\textbf{关键词：}多项分布；Dirichlet分布；插补；EM算法；DA算法 
+\end{abstract}
+\thispagestyle{empty} % 首页不显示页码
+
+\newpage
+\pagenumbering{Roman}
+\setcounter{page}{1}
+\tableofcontents
+
+\newpage
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+
+
+\section{引言}
+正如Honaker, King, and Blackwell(2011)所指出的，”缺失数据是一个普遍存在的问题，尤其是在社会科学数据中。受访者并非每个问题都会回答，国家也并非每年都会收集统计数据，受访者也会从调查的窗口中退出。然而，大多数统计分析假设没有缺失数据，并且只能包括那些每个变量都被观测到的观测值。“在过去的几十年里，已经开发出了广泛可用的缺失值插补方法，使得实践者能够超越如案例删除和均值插补等临时的方法采用更先进的方法，比如Rubin(1987)提出的多重插补、Dempster, Laird, and Rubin(1977)提出的期望最大化（EM）方法、van Buuren, Groothuis-Oudshoorn(2011)提出的链式方程方法以及Tanner, Wong(1987)提出的数据增强（DA）方法。然而，这些方法假设数据来自多元正态分布，忽略了其他分布下的缺失数据。
+
+本文提出的方法用于常见的多元多项式分布的缺失数据插补。与其他填补方法一样，该方法创建一个”填充后的“所有可能的数据版本，以便需要完整观测值的分析可以适当地使用包含缺失值的所有数据。本文使用熟悉且十分常用的贝叶斯推断结合期望最大化（EM）和数据增强（DA）算法来估计多项式分布的参数，并通过最大化后验分布参数的方法来填补缺失的观测值。
+
+多元多项分布缺失数据面临两个挑战：一是存储所有可能组合的变量所需内存空间太大，二是计算完整数据的充分统计量和缺失数据的边际充分统计量所需的计算时间比较长。为了解决这些性能问题，\textbf{MissCat}通过Eddelbuettel,Francois(2011)提出的Rcpp调用C++来加速计算提高效率，后续改进方向考虑通过并行处理来提高速度并节省内存。
+
+与其他流行的插补方法（如\textbf{Amelia}、\textbf{mice}和\textbf{Hmisc}）相比，\textbf{MissCat}在处理分类变量时具有优势，其次\textbf{MissCat}为研究人员提供了对多项式参数估计的便捷访问，因为更多情况下研究人员可能更关注参数估计而并非观测值的插补，运行时间是\textbf{MissCat}比较弱势的方面，但运行时间受多项式分布复杂且繁琐的计算的影响，下面将对此进行讨论。
+
+
+\section{多项式分布的缺失数据}
+本文中提出的方法主要基于Schafer(1997)的专著第七章提出的多元多项式缺失数据插补方法的实现，为了便于参考这本文献，本文使用了与Schaefer(1997)相同的符号。
+
+首先，假设$Y_1,...,Y_p$是分类变量，每个变量取有限的因子水平$Y_j\in\{1,2,...,d_j\},j=1,2,...,p.$\footnote{因为变量均为分类变量，所以我们总能实现将因子转化为正整数的因子水平。}如果观测值是独立同分布的，我们可以将$\boldsymbol{Y}$简化为一个列联表，具有$D=\prod_{j=1}^p d_j$个单元格，其中$D$是$Y_1,...,Y_p$各水平组合的不同数目\footnote{实际在逻辑的约束下，有些组合显然是不可能的，这样的单元格被称为结构零点，本文中我们暂不考虑结构零点。事实上由于结构零点在我们的观测值里不可能出现，所以后面取最大后验参数时也很难取到结构零点。}。这些单元格中每个单元格的计数用$x_d$示，其中$d=1,...,D.$如果样本量为$n$,则$\boldsymbol{x}=(x_1,x_2,...,x_D)$服从多项分布：
+\begin{equation*}
+    \boldsymbol{x}|\boldsymbol{\theta}\sim \text{Multi}(n,\boldsymbol{\theta}),
+\end{equation*}
+其中参数向量$\boldsymbol{\theta}=(\theta_1,\theta_2,...,\theta_D).$多项分布参数向量$\boldsymbol{\theta}$的似然函数为：
+\begin{equation}
+    L(\boldsymbol{\theta}|Y)\propto\prod_{d=1}^D\theta_d^{x_d}I_{\Theta}(\theta)\label{7.3}
+\end{equation}
+其中$I_{\Theta}(\theta)$是一个示性函数，当$\theta\in\Theta$时,$I_{\Theta}(\theta)=1,$否则为$0.$
+
+由此就可以得到众所周知的最大似然估计（MLE）：
+\begin{equation*}
+    \hat{\theta_d}=\frac{x_d}{n},\quad d=1,2,...,D.
+\end{equation*}
+\subsection{贝叶斯推断以及Dirichlet先验}
+
+运用贝叶斯推断最简单的方式是对多项式模型假设一个Dirichlet先验分布(Ferguson 1973)，通常假定$\boldsymbol{\theta}$服从参数为$\boldsymbol{\alpha}=(\alpha_1,...,\alpha_D)$的Dirichlet分布。
+
+\begin{equation*}
+    \text{Diri}(\boldsymbol{\theta}|\boldsymbol{\alpha})=\frac{\Gamma(\sum_{i}\alpha_d)}{\prod_d\Gamma(\alpha_d)}\prod_{d=1}^D \theta_d^{\alpha_d-1}.
+\end{equation*}
+
+当Dirichlet分布作为先验分布的时候，我们很自然地只考虑它的核，即
+\begin{equation*}
+    \pi(\boldsymbol{\theta})\varpropto \prod_{d=1}^D\theta_d^{\alpha_d-1}. 
+\end{equation*}
+
+自然地，我们知道Dirichlet分布是多项分布的共轭先验分布，其后验分布的核为
+\begin{align*}
+    \pi(\boldsymbol{\theta}|\boldsymbol{x})\varpropto &\text{Multi}(\boldsymbol{x};n,\theta_1,...,\theta_D)\cdot \text{Diri}(\boldsymbol{\theta};\boldsymbol{\alpha})\\
+    \varpropto & \prod_{i=1}^D \theta_i^{x_i+\alpha_i-1}\sim \text{Diri}(\boldsymbol{\theta}|\boldsymbol{\alpha'}),
+\end{align*}
+其中$\boldsymbol{\alpha'}=(\alpha_1+x_1,...,\alpha_D+x_D).$
+
+对于后验分布的参数估计我们考虑最大后验估计(Maximum a posteriori estimation,MAE)，Dirichlet分布核函数具有和多项分布的似然函数(\ref{7.3})相似的形式，只需要把$x_d$换成$\alpha_d-1,$因此通过多项分布最大似然估计可以得到Dirichlet分布的参数估计
+\begin{equation*}
+    \theta_d=\frac{\alpha_d-1}{\sum_{d=1}^D \alpha_i-D},d=1,...,D.
+\end{equation*}
+则最大后验估计MAE即
+\begin{equation}
+    \boldsymbol{\theta}=\frac{\boldsymbol{\alpha'}-1}{\alpha_0'-D},\label{MAE}
+\end{equation}
+其中$\boldsymbol{\alpha'}=(\alpha_1+x_1,...,\alpha_D+x_D),\alpha_0'=\sum_{d=1}^D(\alpha_d+x_d)$.
+
+如同典型的贝叶斯分析中所示，先验的选择会对多项式数据的缺失值插补产生重要影响，除了无先验(\texttt{none})以外，\textbf{MissCat}支持三种先验选择。当对先验信息了解较少时，非信息性先验(\texttt{non.informative})是一个合理的选择，当样本量相对于被估计的参数数量较大，非信息性先验对模型推断的影响会很小，\textbf{MissCat}中使用的选择是两倍的Jeffrey's prior，即$c=1$\footnote{选用两倍Jeffrey's prior是因为当使用Jeffrey's prior即$c=\frac{1}{2}$时由最大后验估计可能会出现$\alpha_d<0$的情形。},这提供了合适的后验模式。另一种先验选择是平坦先验\texttt{flat.prior}即研究人员自己指定平坦先验$\boldsymbol{\alpha}=(c,c,...,c),c>1.$\textbf{MissCat}中最后一个选择是数据依赖先验$\texttt{data.dep}$,旨在通过一些总结统计量在分析之前先了解数据，处理方法参考了Darnieder(2011),但由于数据依赖先验的使用一直以来饱受争议，所以不推荐研究人员使用这种先验方法。
+
+\subsection{表征多元多项缺失数据的问题}
+对于我们用到的算法在概念上是很简单的，但是为了在一般情况下描述他们所需的符号表示方法相对复杂，为了表征多元多项缺失数据所包含的信息，要在多个方面扩展列联表的符号表示。
+
+首先我们考虑完整数据列联表$\boldsymbol{x}=(x_1,x_2,...,x_D)$实际上是由$Y_1,Y_2,...,Y_p$的各个水平交叉分类得到的，因此可以看作一个$p$维数组。考虑$x_{\boldsymbol{y}},$其中$\boldsymbol{y}=(y_1,y_2,...,y_p)$表示样本中事件$\{Y_1=y_1,Y_2=y_2,...,Y_p=y_p\}$发生的单位总数，并设$\theta_{\boldsymbol{y}}$为该事件在任何单位上的概率。这里我们使用$\boldsymbol{y}$来表示$(Y_1,Y_2,...,Y_p)$这$p$个分类变量对单个单位的一个可能取值，即数据矩阵$\boldsymbol{Y}$的一行。当带有向量下标$\boldsymbol{y}=(y_1,y_2,...,y_p)$出现时，应该将其解释为一个维度为$d_1\times d_2\times \cdots\times d_p$的数组的元素，而带有标量下标$d$时应将其解释为长度为$D=\prod_{j=1}^p d_j$的向量中的第$d$个元素。于是本文中有时我们会将表$\boldsymbol{x}$和$\boldsymbol{\theta}$看作向量：
+\begin{align*}
+    \boldsymbol{x}=(x_1,x_2,...,x_D)\\
+    \boldsymbol{\theta}=(\theta_1,\theta_2,...,\theta_D)
+\end{align*}
+有时则将它们看作$p$维数组：
+\begin{align*}
+    \boldsymbol{x}=\{x_{\boldsymbol{y}}:\boldsymbol{y}\in\boldsymbol{Y}\}\\
+    \boldsymbol{\theta}=\{\theta_{\boldsymbol{y}}:\boldsymbol{y}\in\boldsymbol{Y}\}\\
+\end{align*}
+这两种形式的区别仅在于符号表示的方便性，因为我们总可以通过为其单元格分配线性顺序从而将数组转化为向量。
+
+所有插补方法的核心在于我们无法完全观测到数据$\boldsymbol{x},$而只能观测到期中的一部分，在多项式情形下，假设我们将观测数据分为已经完全观测的数据$x^\text{obs}$和带有缺失值的数据$x^\text{mis},$用$s=1,2,...,S$来索引缺失模式，并定义一组指示变量
+\begin{equation*}
+    r_{sj}=\begin{cases}
+        1,\text{ 如果$Y_j$在模式$s$中是观测值}\\
+        0,\text{ 如果$Y_j$在模式$s$中是缺失值}
+    \end{cases}
+\end{equation*}
+
+令$x_{\boldsymbol{y}}^{(s)}$表示缺失模式$s$中样本单位的数量，其中$\boldsymbol{y}=(y_1,y_2...,y_p)$并且令
+\begin{equation*}
+    \boldsymbol{x}^{(s)}=\{x_{\boldsymbol{y}}^{(s)}:\boldsymbol{y}\in\boldsymbol{Y}\}
+\end{equation*}
+记作这些计数的全集。如果模式$s$中某些变量缺失则我们不会观察到$\boldsymbol{x}^{(s)}$而是会观察到一个较低维度的表格，其中样本单位仅按观测变量交叉分类。令$O_s(y)$和$M_s(y)$分别表示每个缺失模式中的观测变量集合和缺失变量集合，其中的元素定义为
+\begin{align*}
+    O_s(y)=\{y_j:r_{sj}=1\}\\
+    M_s(y)=\{y_j: r_{sj}=0\}
+\end{align*}
+同时令$O_s,M_s$分别为$O_s(y),M_s(y)$所有可能的取值。例如$p=4,$缺失模式$s$表示$Y_1,Y_4$观测到但是$Y_2,Y_3$缺失。于是$O_s(y)=(y_1,y_4),M_s(y)=(y_2,y_3),$
+\begin{align*}
+    O_s=\{(y_1,y_4):y_1=1,2,...,d_1;y_4=1,2,...,d_4\},\\
+    M_s=\{(y_2,y_3):y_2=1,2,...,d_2;y_3=1,2,...,d_3\}.
+\end{align*}
+
+由于大多数缺失值都是部分观测到的，在每个缺失模式$s$中，观测值通过它们的观测变量进行交叉分类，这些不同的观测模式记为$x^{(s)},$并把他们的计数汇总到一个表中，记为
+\begin{equation*}
+    z^s_{O_s(y)}=\sum_{M_s(y)\in M_s}x^{(s)}\text{ for all } O_s(y)\in O_s.
+\end{equation*}
+该表格中的单元格$O_s(y)$的边际概率就记为
+\begin{equation*}
+    \beta_{O_s(y)}=\sum_{M_s(y)\in M_s}\theta_{\boldsymbol{y}}
+\end{equation*}
+部分观测数据对所有可能数据的对数似然函数贡献为：
+\begin{equation*}
+    l(\theta|Y_{\text{obs}})=\sum_{s=1}^S\sum_{O_s(y)\in O_s}z_{O_s(y)}\log (\beta_{O_s(y)})
+\end{equation*}
+
+这种情景下EM算法是直接的，Fuchs(1982)首次描述了多变量的情况，对于E步我们根据观测数据和当前的$\theta$值来计算期望的汇总统计量：
+\begin{equation}
+    \mathbb{E}(x_{\boldsymbol{y}}|Y,\theta)=x_{\boldsymbol{y}}+\sum_{s=1}^Sz_{O_s(y)}^{(s)}\theta_{\boldsymbol{y}}/\beta_{O_s(y)},\label{Estep}
+\end{equation}
+而这就导出了M步，根据前面提到的Dirichlet分布最大后验估计(\ref{MAE})就可以导出最大化后验概率：
+\begin{equation*}
+    \hat{\theta_{\boldsymbol{y}}}=\frac{\mathbb{E}(x_{\boldsymbol{y}})+\alpha_{\boldsymbol{y}}-1}{n+\alpha_0-D}.
+\end{equation*}
+
+下面是一次迭代中EM的算法。
+
+\begin{algorithm}[H]
+    \caption{1 iteration of EM for saturated multinomial model}
+    \For{$\boldsymbol{y}\in \mathcal{Y}$}{$\mathbb{E}(x_y)\gets 0$}
+    \For{$s=1$ \KwTo $S$}{
+        \For{$\mathcal{O}_s(y)\in O_s$}{
+            % \If{$z_{\mathcal{O}_s(y)}^{(s)}\neq 0$}{
+                \eIf{$M_s=\varnothing $}{
+                    $x_y\gets x_y+z_{O_s(y)}^{(s)}$\;
+                }{$sum=0$\;
+                \For{$\mathcal{M}_s(y)\in M_s$}{$sum\gets sum+\theta_y;x_y\gets x_y+z_{\mathcal{O}_s(y)}^{(s)}\theta_y/sum$}
+                }
+            % }
+        }
+    }
+    \For{$y\in\mathcal{Y}$}{$\theta_y\gets (x_y+\alpha_y-1)/(n+\alpha_0-D).$}
+\end{algorithm}
+
+DA算法是一种基于马尔可夫链蒙特卡罗方法的迭代算法，用于通过缺失模拟数据和参数的联合分布来处理缺失数据的填补问题。在多项式数据情况下DA算法的基本思想是交替执行两个步骤：I步即数据的增广或增强，P步即参数的估计。具体来说，I步是给定当前参数值随机模拟缺失数据的分布，P步是给定增广后的完整数据，从而估计参数的后验分布，并从中抽取新一轮的参数值。
+
+DA算法的实现，大致思路与EM算法相同。只是并非像公式(\ref{Estep})那样根据$\theta$的当前值按比例将部分观测计数分配给完全观测的$x^{\text{obs}}$计数，而是根据$\theta$的当前值进行随机分配从而取代比例分配。
+
+
+
+
+
+
+
+  \section{案例分析}
+  本文制作的R包\textbf{MissCat}名称的含义为处理带缺失（Missingness）的分类变量（Categorical variables）于是取名为\textbf{MissCat}.R包已经上传到作者本人的\texttt{github},在R中键入以下代码可安装
+  \begin{verbatim}
+     R< devtools::install_github("Go9entle/MissCat")
+  \end{verbatim}
+
+  \textbf{MissCat}包提供了实际的案例数据，数据来自美国社区调查（American Community Survey, ACS）的数据，包含了居住在加利福尼亚州洛杉矶县2221人口普查区中3974个个体的观察数据，数据来源于2014年5年期ACS，并且数据是包含缺失值的，以下是该数据集的各个变量及其含义。
+  
+  \begin{table}[H]
+    \centering
+    \caption{\texttt{tract2221}数据集变量及其含义}
+    \begin{tabular}{ll}
+        \toprule
+        Variable&description \\ \midrule
+        age & 个体的年龄，按5年为单位的年龄段进行分类 \\
+        gender&仅分类为为男性和女性两个类别 \\
+        marital\_status&个体的婚姻状况，分类为5个类别\\
+        edu\_attain&个体的教育水平，分类为7个类别\\
+        emp\_status&个体的就业状态，分类为3个类别\\
+        nativity&个体的出生地，分类为4个类别\\
+        pov\_status&个体的贫困状态，分类为2个类别\\
+        geog\_mobility&个体在过去一年的地理流动性，分类为5个类别\\
+        ind\_income&个体的收入，分类为9个类别\\
+        race&个体的种族，具体种族类别不在此数据集给出\\\bottomrule
+    \end{tabular}
+  \end{table}
+可以键入以下代码获取该数据集详细的描述。
+  \begin{verbatim}
+     R< library(MissCat)
+     R< ?tract2221
+  \end{verbatim}
+
+  \subsection{通过EM及DA算法进行插补}
+    \textbf{MissCat}主要面向用户的函数为\texttt{impute4mmv}，它为多项式数据提供插补。可以指定两种选项，使用EM或DA执行多项式插补，
+  并指定四种可能的先验之一：\texttt{"none", "data.dep", "flat.prior", "non.informative"}。当选择的先验为\texttt{"flat.prior"}时参数alpha为必填项
+  \subsubsection{使用EM算法插补}
+  在R中键入以下代码可以通过EM算法插补缺失值，示例选用的先验信息为"non.informative"
+  \begin{verbatim}
+      R< dat <- tract2221[,c(1:2,4,7,9)]
+      R< imputed_result <- impute4mmv(dat, method = "EM",
+                                         conj_prior = "non.informative")
+  \end{verbatim}
+  用EM算法得到的插补数据集可以通过以下代码获取
+  \begin{verbatim}
+      R< imputed_EM<-imputed_result@data[["imputed_data"]]
+  \end{verbatim}
+
+  除了插补外，一些用户可能也对参数估计结果感兴趣，\texttt{MissCat}具备获取参数估计结果的功能
+  \begin{verbatim}
+     R< result <- EM_multinomial(dat, conj_prior = "non.informative")
+  \end{verbatim} 
+函数 EM\_ multinomial可以得到对变量集使用EM算法的插补迭代次数，以及拟合模型的对数似然值，键入以下代码可以获取包括更新的参数估计和充分统计量的数据框
+  \begin{verbatim}
+      R< imputeEM_mle<-result@mle_x_y
+  \end{verbatim}    
+  \subsubsection{使用DA算法插补}
+  在R中键入以下代码可以通过DA算法插补缺失值，选用的先验信息为\texttt{"non.informative"}
+  \begin{verbatim}
+      R< dat <- tract2221[,c(1:2,4,7,9)]
+      R< imputed_result <- impute4mmv(dat, method = "DA", 
+                                        conj_prior = "non.informative")
+  \end{verbatim}
+  用DA算法得到的插补数据集可以通过以下代码获取
+  \begin{verbatim}
+       R< imputed_DA<-imputed_result@data[["imputed_data"]]
+  \end{verbatim}
+  
+  同样的，函数 DA\_ multinomial可以得到对变量集使用DA算法的插补迭代次数，以及拟合模型的对数似然值，键入以下代码可以获取包括更新的参数估计和充分统计量的数据框
+  \begin{verbatim}
+      R< result <- DA_multinomial(dat, conj_prior = "non.informative")
+      R< imputeDA_mle<-result@mle_x_y
+  \end{verbatim}
+  
+  在DA方法中，\texttt{burnin}参数控制了进入样本的数量，默认情况下是100.参数估计是基于后验样本均值计算的，后验样本的数量由\texttt{post\_draws}控制，默认值为1000次抽样。
+  
+  \subsection{输出结果的分析}
+  \textbf{MissCat}使用的是S4类（S4 Calsses），其中函数\texttt{EM\_multinomial}和\texttt{DA\_multinomial} 都返回 \texttt{mod\_imputeMulti-class} 
+  而\texttt{impute4mmv}和\texttt{impute5mmv}返回\texttt{imputeMulti-class}，\texttt{imputeMulti class}继承自\texttt{mod\_imputeMulti-class}类。
+
+  这些类对象提供了多个方法用于总结和提取类对象中的元素。大多数用户只会关注如何得到参数估计值，但是本文中我们对不同年龄段（18岁到34岁与50岁到64岁）之间按照性别和教育水平的$\hat{\theta}$边际分布感兴趣，即教育水平的提升对性别平等的教育成果有何影响？本R包提供了\texttt{imputeMulti}类中的方法\texttt{get\_parameters}用于提取参数估计值。下面两张表是基于非信息性先验和平坦先验的边际估计结果，具体的执行过程见附录 A。
+% Table generated by Excel2LaTeX from sheet 'Sheet1'
+\begin{table}[H]
+    \centering-
+    \caption{使用非信息性先验估计按性别和教育程度计算的$\hat{\theta}$边际分布，估计值针对18-34岁和50-64岁个人}
+      \begin{tabular}{l|lllllll}
+      \hline
+      \textbf{Ages 18-34} & lt\_hs & some\_hs & hs\_grad & some\_col & assoc\_dec & ba\_deg & grad\_deg\\
+      \hline
+      Female & 0.0507 & 0.0421 &0.1523 & 0.1251 & 0.0000 & 0.0912 & 0.0205 \\
+      Male  & 0.0423 & 0.0928 & 0.0922 & 0.1141 & 0.0187 & 0.1197 & 0.0383 \\
+      \hline
+      \textbf{Ages 50-64} &       &       &       &       &       &       &\\  
+      \hline
+      Female & 0.1260 & 0.0866 & 0.1304 & 0.1051 & 0.0405 & 0.0000 & 0.0318 \\
+      Male  & 0.1704 & 0.0980 & 0.0357 & 0.0471 & 0.0575 & 0.0710 & 0.0000 \\
+      \hline
+      \hline
+      \end{tabular}%
+  
+  \end{table}%
+
+  \begin{table}[H]
+    \centering
+    \caption{使用平坦先验估计按性别和教育程度计算的$\hat{\theta}$边际分布，估计值针对18-34岁和50-64岁个人}
+      \begin{tabular}{l|lllllll}
+      \hline
+      \textbf{Ages 18-34} & lt\_hs & some\_hs & hs\_grad & some\_col & assoc\_dec & ba\_deg & grad\_deg\\
+      \hline
+      Female & 0.0684 & 0.0671 &0.0831 & 0.0791 & 0.0611 & 0.0744 & 0.0641 \\
+      Male  & 0.0671 & 0.0744 & 0.0744 & 0.0776 & 0.0641 & 0.0784 & 0.0668 \\
+      \hline
+      \textbf{Ages 50-64} &       &       &       &       &       &       &\\  
+      \hline
+      Female & 0.0763 & 0.0729 & 0.0764 & 0.0744 & 0.0687 & 0.0653 & 0.0680 \\
+      Male  & 0.0801 & 0.0738 & 0.0652 & 0.0694 & 0.0702 & 0.0713 & 0.0652 \\
+      \hline
+      \hline
+      \end{tabular}%
+  
+  \end{table}%
+
+  通过非信息性先验的边际估计结果可以看出，随着年龄较小的群体教育水平的提升，估计值也相应较高，尤其是在“部分大学\texttt{some\_col}”或更高教育水平方面。还可以看到，年轻群体在教育成果上性别平等度更高。
+
+然而，我们在使用平坦先验时则不会得出这样的结论。正如预期，平坦先验对$\hat{\theta}$ 的估计产生了显著的平滑效应。尽管非信息性先验的参数估计值存在较大范围，平坦先验的所有估计值都被平滑到接近 0.07。这个对比表明，与大多数贝叶斯分析一样，选择先验对多项式数据的插补结果可能非常敏感。
+
+\section{方法对比}
+  
+  在本节中，我们将MissCat与其他流行的分类数据插补方法进行比较。具体来说，我们通过Honaker等人（2011年）提出的bootstrap EM方法（Amelia包），Van Buuren和Groothuis-Oudshoorn（2011年）提出的多项逻辑回归方法（Mice包），以及 Alex Whitworth（2023年）基于多项式分布的EM方法（imputeMulti包）来进行检验。我们将比较这些方法的插补速度和准确率。
+  
+  
+  \subsection{插补的速度对比}
+  
+  采用Mersmann（2015）的microbenchmark包比较MissCat的EM、DA方法与其他包的速度。为了更准确地测量算法性能，测试不是并行运行的，且对于允许多重插补的任何软件包，都没有指定多重插补。我们构建了一个模拟的数据集，该数据集包含1000个个体的社会经济信息，模拟了他们的年龄、性别、教育水平、居住地类型和收入水平。每个变量的生成逻辑是基于其他变量的依赖关系，这些依赖关系在现实中可能体现为年龄、教育、收入等变量之间的相互影响。部分变量的生成包含了条件逻辑，以反映不同群体之间的差异，详细的构建过程可以见附录 B。分别用\texttt{MissCat},\texttt{Amelia},\texttt{mice},\texttt{Hmisc}和\texttt{imputeMulti}包对数据进行插补，比较插补速度。
+
+  最终插补速度的总结如下表所示
+ 
+
+  
+  \begin{table}[h]
+  \caption{不同插补方法算法速度比较(单位毫秒(ms))}
+  \label{tab:imputation_performance}
+  \resizebox{\linewidth}{!}{ % 表格宽度缩放到幻灯片宽度
+  \begin{tabular}{lrrrrrrr}
+  \toprule
+  \textbf{expr} & \textbf{min} & \textbf{lq} & \textbf{mean} & \textbf{median} & \textbf{uq} & \textbf{max} & \textbf{neval} \\
+  \midrule
+  MissCat\_EM   &  2025.6512 &  2041.8137 & 2090.80534 &  2053.5401  & 2109.1423  & 2287.0628  & 10 \\
+ MissCat\_DA   & 2319.3046  & 2322.1995 & 2380.77094  & 39539.54  & 40934.36  & 41902.42  & 10 \\
+ imputeMulti&2930.1915&2972.5013&3131.99049&3066.6566&3117.3433&3586.3419&10\\
+ mice    & 697.4555  & 706.1903 &715.90906   & 715.2482  & 728.0419  & 730.9555  & 10 \\
+ Hmisc   &  308.1677 &  313.4641 & 353.55779 &  323.2856  &  343.1740  &  494.9068  & 10 \\
+  Amelia  &   20.8178 &   21.2363 &   22.67889  &   21.4076  & 22.3839 &28.2523  &  10\\
+  \bottomrule
+  \end{tabular}
+  }
+  \end{table}
+  运行结果如表\ref{tab:imputation_performance} 所示。所有算法都在几秒钟内完成。Amelia是最快的算法，我们的方法略快于使用相似的EM方法的imputeMulti包。但由于我们对于允许多重插补的方法只进行一次插补而往往\textbf{mice,Hmisc,Amelia}都会进行多重插补减缓运算速度来提升准确率，所以实际上用时将会更长。  
+
+  \subsection{插补的准确率对比}
+  
+  为了得到更准确的结论，我们采用模拟数据，对于完整的模拟采用三种缺失类型：完全随机缺失（missing completely at random,MCAR）、随机缺失（missing at random,MAR）、非随机缺失（missing not at random,MNAR）进行测试。
+  并对三种缺失模式均采用\textbf{MissCat}的EM和DA方法，\textbf{mice}和\textbf{Amelia}进行插补。对于插补的准确率我们采用插补后的数据与原始的完整数据相同的样本数占总样本数的比例。
+  
+  测试将\textbf{MissCat}的准确性与其他方法的单次插补进行比较。对每个插入缺失值水平运行 20 次这样的测试，平均结果如表\ref{tab:accuracy}所示。
+  
+  \begin{table}[ht]
+      \caption{20\%缺失率下不同缺失类型和}
+      \label{tab:accuracy}
+      \centering
+      \begin{tabular}{ccccc}
+          \toprule % 顶部横线
+          缺失类型 & MissCat\_EM & MissCat\_DA&mice & Amelia \\
+          \midrule % 中部横线
+           MCAR & 0.913 & 0.904&0.909 & 0.900 \\
+           MAR&  0.905& 0.897 &0.889 & 0.869  \\
+           MNAR & 0.909 & 0.903 &0.895 & 0.891 \\
+          \bottomrule % 底部横线
+      \end{tabular}
+      
+  \end{table}
+  
+ 可以看出三种缺失类型在缺失率为$20\%$的情形下，\textbf{MissCat}两种插补方法都有明显的优势.在MAR和MNAR情况下，\textbf{MissCat}的插补准确率均高于\textbf{mice}和\textbf{Amelia}，在MCAR情况下，\textbf{MissCat}的插补准确率与\textbf{mice}相当，略高于\textbf{Amelia}。这表明\textbf{MissCat}在处理分类数据的插补问题上具有较高的准确性。
+  
+  
+  \section{总结}
+  
+  针对分类数据的缺失值处理在实际应用中非常普遍。尽管存在许多插补方法，但绝大多数依赖于多变量正态性的假设。通常，使用专为研究者数据生成分布设计的模型是可取的。为了插补多变量多项式数据\textbf{MissCat}基于EM和DA提供了易于使用的模型。此外，\textbf{MissCat}通过提供用C++进行数据合并和匹配的函数，易于集成到常见分析中，并且能够高效处理大型数据集。MissCat还允许在处理极大型数据集时进行并行处理。
+  
+  本文提供了对\textbf{MissCat}包的应用案例，以及与R中现有分类数据插补方法的比较。如结果所示，使用专为多变量多项式插补设计的软件包，如\textbf{MissCat}，为变量数量较少的数据集提供了精确的解决方案；对于变量数量较多的数据集，可以通过将变量分割成相关组来使用\textbf{MissCat}。此外，本文提出的方法在观察水平上提供了较高的插补准确性，但在运行速度上仍存在改进空间。
+  
+  \textbf{MissCat}的未来发展预计将集中在通过将更多代码迁移到\texttt{Rcpp}来扩展性能，并探索进一步的参数估计并行化，并阅读更多文献采用更多插补分类变量的实现算法。
+  
+  
+  \newpage
+  \addcontentsline{toc}{section}{参考文献} % 将参考文献添加到目录
+  \begin{thebibliography}{99}
+      \bibitem{a}Darnieder WF (2011). \emph{Bayesian Methods for Data-Dependent Priors.}[D]. The Ohio State University.
+      \bibitem{b}Dempster AP, Laird NM, Rubin DB (1977). \emph{Maximum likelihood from incomplete data via the EM algorithm.}[J]. Journal of the royal statistical society. Series B (methodological), pp.1-38.
+    \bibitem{c}Fuchs C (1982). \emph{Maximum likelihood estimation and model selection in contingency tables with missing data.}[J]. Journal of the American Statistical Association, 77(377), pp.270-278.
+    \bibitem{d}Honaker J, King G, Blackwell M (2011). \emph{Amelia II: A Program for Missing Data.}[J]. Journal of Statistical Software, 45(7), pp.1-47.
+    \bibitem{e}Schafer JL (1997). \emph{Analysis of incomplete multivariate data.}[M]. CRC press.
+  \end{thebibliography}
+  
+\newpage
+
+
+\appendix
+% \renewcommand{\thesection}{\Alph{section}.\arabic{section}}
+% \setcounter{section}{0}
+% \begin{appendices}
+\section{通过\texttt{get\_parameters}获取边际分布}
+
+\begin{lstlisting}[style=R]
+set.seed(2134)
+dat <- tract2221[,c(1:2,4,7,9)]
+MissCat_EM_non <- impute4mmv(dat, method = "EM", 
+                    conj_prior = "non.informative")
+MissCat_EM_flat <- impute4mmv(dat, method = "EM", 
+                    conj_prior = "flat.prior", alpha = 10L)
+
+param_est_non <- get_parameters(MissCat_EM_non)
+param_est_flat <- get_parameters(MissCat_EM_flat)
+
+pe_non18 <- param_est_non[param_est_non$age %in%
+            c("18_24", "25_29", "30_34"),]
+pe_non50 <- param_est_non[param_est_non$age %in%
+            c("50_54", "55_59", "60_64"),]
+non_theta18_34 <- sum(pe_non18$theta_y)
+non_theta50_64 <- sum(pe_non50$theta_y)
+marg_non18 <- tapply(pe_non18$theta_y,
+            list(pe_non18$gender, pe_non18$edu_attain), sum)
+marg_non50 <- tapply(pe_non50$theta_y,
+            list(pe_non50$gender, pe_non50$edu_attain), sum)
+round(marg_non18 / non_theta18_34, 4)
+round(marg_non50 / non_theta50_64, 4)
+
+pe_flat18 <- param_est_flat[param_est_flat$age %in%
+            c("18_24", "25_29", "30_34"),]
+pe_flat50 <- param_est_flat[param_est_flat$age %in%
+            c("50_54", "55_59", "60_64"),]
+flat_theta18_34 <- sum(pe_flat18$theta_y)
+flat_theta50_64 <- sum(pe_flat50$theta_y)
+marg_flat18 <- tapply(pe_flat18$theta_y,
+            list(pe_flat18$gender, pe_flat18$edu_attain), sum)
+marg_flat50 <- tapply(pe_flat50$theta_y,
+            list(pe_flat50$gender, pe_flat50$edu_attain), sum)
+round(marg_flat18 / flat_theta18_34, 4)
+round(marg_flat50 / flat_theta50_64, 4)
+\end{lstlisting}
+
+\section{不同R包插补的速度及准确度比较}
+\begin{lstlisting}[style=R, title=testMissCat.R]                
+library("Rcpp")
+library("microbenchmark")
+library("imputeMulti")
+library("mice")
+library("Amelia")
+library("Hmisc")
+library("MissCat")
+
+    #Simulate
+set.seed(2025)
+    # 创建基础数据框
+data <- data.frame(
+    Age = sample(1:3, 1000, replace = TRUE),  # Age: 18-22, 22-35, 35-65
+    Gen = sample(1:2, 1000, replace = TRUE),  # Gender: male=1, female=2
+    Edu = NA,                                 # Education: level1-5
+    Res = sample(1:2, 1000, replace = TRUE),  # Resident: 1=urban, 2=rural
+    Inc = NA                # 初始化Income为NA Income: 3k-,3k-5k,8k-10k,10k+
+    )
+    # 根据Age生成Edu
+data$Edu <- ifelse(data$Age == 1,
+                sample(1:2, sum(data$Age == 1), replace = TRUE), # Age为1时，Edu取1或2
+                sample(1:5, sum(data$Age != 1), replace = TRUE)) # 其他情况，Edu取1-5
+    # 根据Age和Resident生成Income
+data$Inc <- ifelse(data$Age == 1,
+                    sample(1:2, sum(data$Age == 1), replace = TRUE), # Income较小
+                    ifelse(data$Age == 2,
+                        sample(1:4, sum(data$Age == 2), replace = TRUE), # 中等收入
+                        sample(1:4, sum(data$Age == 3), replace = TRUE))) # 收入较高
+    
+    # 调整Resident影响Income
+data$Inc <- ifelse(data$Res == 1,
+                pmin(data$Inc + 1, 4), # 城市居民收入更高
+                data$Inc)               # 农村居民收入不变
+    # 根据Edu调整Income
+data$Inc <- ifelse(data$Edu == 5,
+                pmin(data$Inc + 2, 4), # 高教育水平收入更高
+            ifelse(data$Edu >= 3,
+                pmin(data$Inc + 1, 4), # 中等教育水平收入增加
+                data$Inc))              # 低教育水平收入不变
+    
+    p <- ncol(data)
+    
+    # 生成MCAR缺失数据
+mcar_data <- ampute(data, prop = 0.2, mech = "MCAR")$amp
+mar_data <- ampute(data, prop = 0.2, mech = "MAR")$amp
+mnar_data <- ampute(data, prop = 0.2, mech = "MNAR")$amp
+    
+    #转化为分类变量取值因子水平
+mcar_data <- data.frame(lapply(mcar_data, factor))
+mar_data <- data.frame(lapply(mar_data, factor))
+mnar_data <- data.frame(lapply(mnar_data, factor))
+    
+    
+    #速度
+runspeed<-microbenchmark(
+    MissCat_EM =  impute4mmv(mar_data, method="EM", 
+                        conj_prior = "non.informative"),
+    MissCat_DA =  impute4mmv(mar_data, method="DA", 
+                        conj_prior = "non.informative"),
+    imputeMulti =  multinomial_impute(mar_data, "EM", 
+                        conj_prior = "non.informative"),
+    amelia =  amelia(mar_data, m = 1, noms = 1:p),
+    hmisc =  aregImpute(~ Age + Gen + Edu + Res + Inc,
+            data = mar_data, n.impute = 1, type = "pmm"),
+    mice =  mice(mar_data, m = 1, method = "polyreg"), 
+    times = 10L
+      )
+summ <- summary(runspeed)
+    
+    # 插补并比较准确率
+    ## 定义比较函数和计算插补准确率函数
+compare_rows <- function(row1, row2) {
+      return(as.integer(!all(row1 == row2)))
+    }
+    
+calculate_accuracy <- function(completed_data, true_data) {
+      differences <- mapply(compare_rows, split(completed_data, 1:nrow(completed_data)), 
+        split(true_data, 1:nrow(true_data)))
+      difference_ratio <- sum(differences) / nrow(completed_data)
+      accuracy <- 1 - difference_ratio  # 正确率 = 1 - 差异比例
+      return(accuracy)
+    }
+    
+    
+    ## MCAR 完全随机缺失
+    ### 使用 MissCat 进行插补
+    ####EM
+MissCatEM_mcar <- impute5mmv(mcar_data,method = "EM",
+                    conj_prior = "non.informative")
+MissCatEM_mcar_imp <- as.data.frame(MissCatEM_mcar@data$imputed_data)
+    ####DA
+MissCatDA_mcar <- impute5mmv(mcar_data,method = "DA",
+                    conj_prior = "non.informative")
+MissCatDA_mcar_imp <- as.data.frame(MissCatDA_mcar@data$imputed_data)
+    
+    ### 使用 mice 进行插补
+mice_mcar <- mice(mcar_data, m = 1, method = 'polyreg')
+mice_mcar_imp <- complete(mice_mcar)
+    
+    ### 使用 Amelia 进行插补
+amelia_mcar <- amelia(mcar_data, m = 1, noms = 1:p)
+amelia_mcar_imp <- as.data.frame(amelia_mcar$imputations$imp1)
+    
+    ### 计算各个插补方法的准确率
+mice_mcar_accuracy <- calculate_accuracy(mice_mcar_imp, data)
+amelia_mcar_accuracy <- calculate_accuracy(amelia_mcar_imp, data)
+MissCatEM_mcar_accuracy <- calculate_accuracy(MissCatEM_mcar_imp, data)
+MissCatDA_mcar_accuracy <- calculate_accuracy(MissCatDA_mcar_imp, data)
+    
+    ### 输出结果
+cat("对于完全随机缺失(MCAR)模式的插补准确率如下：\n",
+    "MissCat的EM方法插补的准确率:", MissCatEM_mcar_accuracy, "\n",
+    "MissCat的DA方法插补的准确率:", MissCatDA_mcar_accuracy, "\n",
+    "MICE 插补的准确率:", mice_mcar_accuracy, "\n",
+    "Amelia 插补的准确率:", amelia_mcar_accuracy, "\n")
+    
+    ## MAR 随机缺失
+    ### 使用 MissCat 进行插补
+    ####EM
+MissCatEM_mar <- impute5mmv(mar_data,method = "EM",
+                    conj_prior = "non.informative")
+MissCatEM_mar_imp <- as.data.frame(MissCatEM_mar@data$imputed_data)
+    ####DA
+MissCatDA_mar <- impute5mmv(mar_data,method = "DA",
+                    conj_prior = "non.informative")
+MissCatDA_mar_imp <- as.data.frame(MissCatDA_mar@data$imputed_data)
+    
+    ### 使用 mice 进行插补
+mice_mar <- mice(mar_data, m = 1, method = 'polyreg')
+mice_mar_imp <- complete(mice_mar)
+    
+    ### 使用 Amelia 进行插补
+amelia_mar <- amelia(mar_data, m = 1, noms = 1:p)
+amelia_mar_imp <- as.data.frame(amelia_mar$imputations$imp1)
+    
+    ### 计算各个插补方法的准确率
+mice_mar_accuracy <- calculate_accuracy(mice_mar_imp, data)
+amelia_mar_accuracy <- calculate_accuracy(amelia_mar_imp, data)
+MissCatEM_mar_accuracy <- calculate_accuracy(MissCatEM_mar_imp, data)
+MissCatDA_mar_accuracy <- calculate_accuracy(MissCatDA_mar_imp, data)
+    
+    ### 输出结果
+cat("对于随机缺失(MAR)模式的插补准确率如下：\n",
+    "MissCat的EM方法插补的准确率:", MissCatEM_mar_accuracy, "\n",
+    "MissCat的DA方法插补的准确率:", MissCatDA_mar_accuracy, "\n",
+    "MICE 插补的准确率:", mice_mar_accuracy, "\n",
+    "Amelia 插补的准确率:", amelia_mar_accuracy, "\n")
+    
+    ## MNAR 非随机缺失
+    ### 使用 MissCat 进行插补
+    ####EM
+MissCatEM_mnar <- impute5mmv(mnar_data,method = "EM",
+                    conj_prior = "non.informative")
+MissCatEM_mnar_imp <- as.data.frame(MissCatEM_mnar@data$imputed_data)
+    ####DA
+MissCatDA_mnar <- impute5mmv(mnar_data,method = "DA",
+                    conj_prior = "non.informative")
+MissCatDA_mnar_imp <- as.data.frame(MissCatDA_mnar@data$imputed_data)
+    
+    ### 使用 mice 进行插补
+mice_mnar <- mice(mnar_data, m = 1, method = 'polyreg')
+mice_mnar_imp <- complete(mice_mnar)
+    
+    ### 使用 Amelia 进行插补
+amelia_mnar <- amelia(mnar_data, m = 1, noms = 1:p)
+amelia_mnar_imp <- as.data.frame(amelia_mnar$imputations$imp1)
+    
+    ### 计算各个插补方法的准确率
+mice_mnar_accuracy <- calculate_accuracy(mice_mnar_imp, data)
+amelia_mnar_accuracy <- calculate_accuracy(amelia_mnar_imp, data)
+MissCatEM_mnar_accuracy <- calculate_accuracy(MissCatEM_mnar_imp, data)
+MissCatDA_mnar_accuracy <- calculate_accuracy(MissCatDA_mnar_imp, data)
+    
+    ### 输出结果
+cat("对于非随机缺失(MNAR)模式的插补准确率如下：\n",
+    "MissCat的EM方法插补的准确率:", MissCatEM_mnar_accuracy, "\n",
+    "MissCat的DA方法插补的准确率:", MissCatDA_mnar_accuracy, "\n",
+    "MICE 插补的准确率:", mice_mnar_accuracy, "\n",
+    "Amelia 插补的准确率:", amelia_mnar_accuracy, "\n")
+\end{lstlisting}
+% \end{appendices}
+
+\end{document}

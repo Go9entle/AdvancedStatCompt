@@ -1,0 +1,146 @@
+
+\ProvidesPackage{RUCReport}
+
+%%页边距
+\RequirePackage[left=2.50cm, right=2.50cm, top=2.50cm, bottom=2.50cm]{geometry}
+
+%%一些必要的宏包
+\RequirePackage[unicode=true,colorlinks,urlcolor=blue,linkcolor=black,bookmarksnumbered=blue]{hyperref}
+\RequirePackage{latexsym,amssymb,amsmath,amsbsy,amsopn,amstext,amsthm,amsxtra,color,bm,calc,ifpdf}
+\RequirePackage{graphicx}
+\RequirePackage{enumerate}
+\RequirePackage{fancyhdr}
+\RequirePackage{listings}
+\RequirePackage{multirow}
+\RequirePackage{makeidx}
+\RequirePackage{xcolor}
+\RequirePackage{fontspec}
+\RequirePackage{subfigure}
+\PassOptionsToPackage{hyphens}{url}
+\RequirePackage{hyperref}
+\RequirePackage{pythonhighlight}
+
+\RequirePackage{tcolorbox}
+
+\RequirePackage{fontawesome}
+\RequirePackage{caption}
+%% 去掉图标标题中的冒号，将分隔变为空格
+% 或者是：
+% \captionsetup{labelformat=default,labelsep=space} %去除冒号
+\captionsetup[table]{labelsep=space} % 表
+\captionsetup[figure]{labelsep=space} % 图  
+
+%% 更改摘要二字的样式
+\renewcommand{\abstractname}{\textbf{\large {摘\quad 要}}} 
+
+%可固定下划线长度
+\makeatletter
+\newcommand\dlmu[2][4cm]{\hskip1pt\underline{\hb@xt@ #1{\hss#2\hss}}\hskip3pt}
+\makeatother
+
+%更改主题
+% \hypersetup{
+%     colorlinks=true,
+%     linkcolor=blue,
+%     filecolor=blue,      
+%     urlcolor=Magenta,
+%     citecolor=orange,
+% }
+
+%%对一些autoref的中文引用名作修改
+\def\equationautorefname{式}
+\def\footnoteautorefname{脚注}
+\def\itemautorefname{项}
+\def\figureautorefname{图}
+\def\tableautorefname{表}
+\def\partautorefname{篇}
+\def\appendixautorefname{附录}
+\def\chapterautorefname{章}
+\def\sectionautorefname{节}
+\def\subsectionautorefname{小小节}
+\def\subsubsectionautorefname{subsubsection}
+\def\paragraphautorefname{段落}
+\def\subparagraphautorefname{子段落}
+\def\FancyVerbLineautorefname{行}
+\def\theoremautorefname{定理}
+
+\newtheorem{Theorem}{定理}[section]
+\newtheorem{Lemma}[Theorem]{引理}
+\newtheorem{Corollary}[Theorem]{推论}
+\newtheorem{Proposition}[Theorem]{命题}
+\newtheorem{Definition}[Theorem]{定义}
+\newtheorem{Example}[Theorem]{例}
+
+%%参考文献设置
+\newcommand{\reference}{
+%\nocite{*}   %打开此选项会列出bib里面的所有参考文献
+\bibliographystyle{unsrt} %规定了参考文献的格式
+\begin{center} %居中
+	\bibliography{reference} %调出LaTeX生成参考文献列表
+\end{center}
+}
+
+%%文本框设置
+\newcommand{\tbox}[1]{
+\begin{center}
+\begin{tcolorbox}[colback=gray!10, %gray background
+                  colframe=black, % black frame colour
+                  width=8cm, % Use 8cm total width,
+                  arc=1mm, auto outer arc,
+                  boxrule=0.5pt,
+                 ]
+{#1}
+\end{tcolorbox}
+\end{center}
+}
+
+\pagestyle{fancy}
+\fancyhf{} % 清空默认的页眉和页脚
+% 设置右上角为页码
+\fancyhead[R]{\thepage}
+% 设置左上角为章节名称
+\fancyhead[L]{\textit{\leftmark}} % \leftmark 代表当前章节名称
+\renewcommand{\headrulewidth}{0pt} % 隐藏页眉的横线
+\hypersetup{
+colorlinks=true,
+linkcolor=black
+}%取消目录 索引等红框
+
+
+%封面页设置
+
+% 封面页设置
+\newcommand{\cover}{
+    % 封面校名logo，图片都在figures文件夹里
+    \begin{figure}
+        \centering
+        \vspace{2cm}
+        \includegraphics[width=0.6\textwidth]{figures/ruc_logo.eps}
+    \end{figure}
+
+    % 标题
+    \title{ 
+        \vspace{1.5cm}
+        \heiti \Huge \textbf{基于EM和DA算法的多元分类变量插补的实现} \par
+        \vspace{0.75cm} 
+        \heiti \Large{高等统计计算课程报告}   
+        \vspace{1.5cm}
+    }
+
+    % 作者信息
+    \author{
+        \vspace{0.25cm}
+        \kaishu\Large 郭奕\ 2024103967 \\ % 第一行
+        \vspace{0.25cm}
+        \kaishu\Large 钟艳泓\ 2024103981 \\ % 第二行
+        \vspace{0.25cm}
+        \kaishu\Large 郭镇涛\ 2024103985 \\ % 第三行
+    }
+\date{}
+    
+
+
+    \maketitle
+}
+
+
